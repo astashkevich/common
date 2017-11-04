@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="ru-RU" class="no-js">
+    <head>
+        <meta charset="UTF-8">
+        <title>Example</title>
+    </head>
+    <body class="home">
+        <header class="header clear" role="banner">
+            <div class="wrapper">
+                <div class="logo">
+                    <a href="/">
+                        <img src="" alt="Logo" class="logo-img">
+                    </a>
+                </div>
+                <h1 class="header__title">:</h1>
+                <div class="header__subtitle"></div>
+            </div>
+        </header>
+        <main role="main">
+            <section id="form">
+                <div class="wrapper">
+                    <h2 class="form__title">Для завантаження ФАЙЛУ</h2>
+                    <div class="form__subtitle">заповніть, будь ласка, форму:</div>
+                    <div role="form" class="wpcf7" id="wpcf7-f7-o1" lang="ru-RU" dir="ltr">
+                        <form data-url="{% url 'view_landing' %}" method="post" id="contact-form" class="wpcf7-form" novalidate="novalidate">
+                            <p>
+                                <label>
+                                    <span class="wpcf7-form-control-wrap your-name">{{ form.name }}</span>
+                                </label><br />
+                                <label>
+                                    <span class="wpcf7-form-control-wrap your-email">{{ form.email }}</span>
+                                </label><br />
+                                <label>
+                                    <span class="wpcf7-form-control-wrap your-phone">{{ form.phone }}</span>
+                                </label><br />
+                                <label class="form__submit">
+                                    <input type="submit" value="Завантажити" class="wpcf7-form-control wpcf7-submit" />
+                                </label>
+                            </p>
+                            <div class="wpcf7-response-output wpcf7-display-none wpcf7-mail-sent-ok" role="alert">Дякуємо за Ваше повідомлення. Воно успішно відправлено.</div>
+                            {% csrf_token %}
+                        </form>
+                    </div>
+                </div>      
+            </section>
+        </main>
+        <footer class="footer" role="contentinfo">
+        </footer>
+    <script type="text/javascript">
+        var contactForm = document.getElementById('contact-form'),
+            formURL = contactForm.getAttribute('data-url') || window.location.href,
+            responseOutput = document.querySelector('.wpcf7-response-output');
+            
+        contactForm.addEventListener("submit", ajaxHandler);
+
+        function ajaxHandler(e){
+            e.preventDefault();
+            var xhr = new XMLHttpRequest(),
+                formData = new FormData(this);
+
+            xhr.open('POST', formURL, true);
+            xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
+            xhr.onload = function() {
+                if (xhr.status === 200) {
+                    var data = JSON.parse(xhr.responseText);
+                    clearAllTip();
+                    contactForm.reset();
+                    responseOutput.style.display = 'block';
+                    window.location.href = data.download_url;
+                }
+                else if (xhr.status == 400) {
+                    var data = JSON.parse(xhr.responseText);
+                    clearAllTip();
+                    for (key in data) {
+                        if (data.hasOwnProperty(key)) {
+                            var target = document.querySelector('input[name=' + key + ']').parentNode
+                            addNotValidTip(target, data[key]);
+                        }
+                    }
+                } else {
+                    console.log('Connection Error');
+                }
+            }
+            xhr.send(formData);
+        }
+
+        function addNotValidTip(target, message) {
+            var el = document.createElement('span');
+            el.className = 'wpcf7-not-valid-tip';
+            el.textContent = message;
+            target.appendChild(el);
+        }
+
+        function clearAllTip() {
+            var tips = document.querySelectorAll('.wpcf7-not-valid-tip');
+            Array.prototype.forEach.call(tips, function(el){
+                el.parentNode.removeChild(el);
+            });
+            responseOutput.style.display = 'none';
+        }
+    </script>
+    </body>
+</html>
